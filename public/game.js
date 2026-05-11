@@ -404,51 +404,72 @@ function drawCloud(x, y, size) {
   ctx.fill();
 }
 
-function drawGoals() {
-  // Left goal
-  ctx.fillStyle = '#fff';
-  // Back of net
-  ctx.fillStyle = 'rgba(200,200,200,0.3)';
+// Draw goal backgrounds (nets) — rendered BEHIND the ball
+function drawGoalNets() {
+  // Left goal net background
+  // Dark interior for depth
+  ctx.fillStyle = 'rgba(30,30,30,0.6)';
   ctx.fillRect(0, GOAL_Y, GOAL_WIDTH, GOAL_HEIGHT);
+  // Back wall shading
+  ctx.fillStyle = 'rgba(60,60,60,0.4)';
+  ctx.fillRect(0, GOAL_Y, 4, GOAL_HEIGHT);
   // Net lines
-  ctx.strokeStyle = 'rgba(200,200,200,0.5)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
   ctx.lineWidth = 1;
-  for (let y = GOAL_Y; y <= GROUND_Y; y += 12) {
+  for (let y = GOAL_Y; y <= GROUND_Y; y += 10) {
     ctx.beginPath();
     ctx.moveTo(0, y);
     ctx.lineTo(GOAL_WIDTH, y);
     ctx.stroke();
   }
-  for (let x = 0; x <= GOAL_WIDTH; x += 12) {
+  for (let x = 0; x <= GOAL_WIDTH; x += 10) {
     ctx.beginPath();
     ctx.moveTo(x, GOAL_Y);
     ctx.lineTo(x, GROUND_Y);
     ctx.stroke();
   }
-  // Post and crossbar
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(GOAL_WIDTH - 3, GOAL_Y, 6, GOAL_HEIGHT); // Post
-  ctx.fillRect(0, GOAL_Y - 3, GOAL_WIDTH + 3, 6); // Crossbar
 
-  // Right goal
-  ctx.fillStyle = 'rgba(200,200,200,0.3)';
+  // Right goal net background
+  ctx.fillStyle = 'rgba(30,30,30,0.6)';
   ctx.fillRect(CANVAS_W - GOAL_WIDTH, GOAL_Y, GOAL_WIDTH, GOAL_HEIGHT);
-  ctx.strokeStyle = 'rgba(200,200,200,0.5)';
-  for (let y = GOAL_Y; y <= GROUND_Y; y += 12) {
+  ctx.fillStyle = 'rgba(60,60,60,0.4)';
+  ctx.fillRect(CANVAS_W - 4, GOAL_Y, 4, GOAL_HEIGHT);
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  for (let y = GOAL_Y; y <= GROUND_Y; y += 10) {
     ctx.beginPath();
     ctx.moveTo(CANVAS_W - GOAL_WIDTH, y);
     ctx.lineTo(CANVAS_W, y);
     ctx.stroke();
   }
-  for (let x = CANVAS_W - GOAL_WIDTH; x <= CANVAS_W; x += 12) {
+  for (let x = CANVAS_W - GOAL_WIDTH; x <= CANVAS_W; x += 10) {
     ctx.beginPath();
     ctx.moveTo(x, GOAL_Y);
     ctx.lineTo(x, GROUND_Y);
     ctx.stroke();
   }
+}
+
+// Draw goal posts and crossbars — rendered IN FRONT of the ball
+function drawGoalPosts() {
+  // Left goal
   ctx.fillStyle = '#fff';
-  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 3, GOAL_Y, 6, GOAL_HEIGHT);
-  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 3, GOAL_Y - 3, GOAL_WIDTH + 3, 6);
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 4;
+  ctx.fillRect(GOAL_WIDTH - 4, GOAL_Y - 4, 8, GOAL_HEIGHT + 4); // Post
+  ctx.fillRect(0, GOAL_Y - 6, GOAL_WIDTH + 4, 8); // Crossbar
+  // Post highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillRect(GOAL_WIDTH - 2, GOAL_Y, 2, GOAL_HEIGHT);
+
+  // Right goal
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 4, GOAL_Y - 4, 8, GOAL_HEIGHT + 4); // Post
+  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 4, GOAL_Y - 6, GOAL_WIDTH + 4, 8); // Crossbar
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillRect(CANVAS_W - GOAL_WIDTH, GOAL_Y, 2, GOAL_HEIGHT);
+
+  ctx.shadowBlur = 0;
 }
 
 function drawBall(ball) {
@@ -718,7 +739,9 @@ function render() {
   ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
   drawField();
-  drawGoals();
+
+  // Layer order: goal nets (back) → players + ball → goal posts (front)
+  drawGoalNets();
 
   // Draw players — use predicted position for our own player
   let leftPlayerData = gameState.players.left;
@@ -733,8 +756,11 @@ function render() {
   drawPlayer(leftPlayerData, leftTeam);
   drawPlayer(rightPlayerData, rightTeam);
 
-  // Draw ball
+  // Draw ball (between net and posts so it appears inside the goal)
   drawBall(gameState.ball);
+
+  // Draw posts on top of everything
+  drawGoalPosts();
 
   // Draw powerup
   drawPowerup(gameState.powerup);

@@ -197,24 +197,52 @@
     #hud {
       display: none;
       width: 800px;
-      justify-content: space-between;
+      position: relative;
+      height: 40px;
+    }
+    .hud-left {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
       align-items: center;
-      padding: 8px 20px;
-      background: rgba(0,0,0,0.6);
-      border-radius: 8px 8px 0 0;
+      gap: 12px;
+    }
+    .hud-right {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hud-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
     .hud-score {
-      font-size: 24px;
+      font-size: 36px;
       font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
     .hud-timer {
-      font-size: 20px;
+      font-size: 22px;
       color: #ffd700;
       font-weight: bold;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 16px;
+      border-radius: 6px;
+      font-style: italic;
     }
     .hud-team {
-      font-size: 14px;
-      color: #aaa;
+      font-size: 16px;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
     }
   </style>
 </head>
@@ -266,14 +294,16 @@
 
   <!-- HUD -->
   <div id="hud">
-    <div>
-      <span class="hud-team" id="hudLeftTeam"></span>
-      <span class="hud-score" id="hudLeftScore" style="color:#4CAF50;">0</span>
+    <div class="hud-left">
+      <span class="hud-team" id="hudLeftTeam" style="color:#ff4444;"></span>
+      <span class="hud-score" id="hudLeftScore" style="color:#fff;">0</span>
     </div>
-    <div class="hud-timer" id="hudTimer">1:30</div>
-    <div>
-      <span class="hud-score" id="hudRightScore" style="color:#2196F3;">0</span>
-      <span class="hud-team" id="hudRightTeam"></span>
+    <div class="hud-center">
+      <span class="hud-timer" id="hudTimer">1:00</span>
+    </div>
+    <div class="hud-right">
+      <span class="hud-score" id="hudRightScore" style="color:#fff;">0</span>
+      <span class="hud-team" id="hudRightTeam" style="color:#ff4444;"></span>
     </div>
   </div>
 

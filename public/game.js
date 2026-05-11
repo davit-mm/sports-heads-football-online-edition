@@ -349,127 +349,211 @@ function updateParticles() {
 // RENDERING
 // ============================================================
 
+// Stadium background dimensions
+const STAND_TOP = 0;
+const STAND_BOTTOM = GROUND_Y - 60; // where the ad boards start
+const AD_BOARD_HEIGHT = 30;
+const AD_BOARD_Y = GROUND_Y - AD_BOARD_HEIGHT;
+
 function drawField() {
-  // Sky gradient
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
-  skyGrad.addColorStop(0, '#87CEEB');
-  skyGrad.addColorStop(0.7, '#b0e0e6');
-  skyGrad.addColorStop(1, '#90EE90');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, CANVAS_W, GROUND_Y);
+  // Sky
+  ctx.fillStyle = '#87CEEB';
+  ctx.fillRect(0, 0, CANVAS_W, 100);
 
-  // Clouds
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  drawCloud(100, 60, 40);
-  drawCloud(350, 40, 30);
-  drawCloud(600, 70, 35);
-  drawCloud(750, 30, 25);
+  // Stadium back wall / upper tier
+  const upperGrad = ctx.createLinearGradient(0, 50, 0, 180);
+  upperGrad.addColorStop(0, '#c8c8c8');
+  upperGrad.addColorStop(1, '#a0a0a0');
+  ctx.fillStyle = upperGrad;
+  ctx.fillRect(0, 50, CANVAS_W, 130);
 
-  // Grass
+  // Upper tier roof structure
+  ctx.fillStyle = '#888';
+  ctx.fillRect(0, 50, CANVAS_W, 8);
+  // Triangular roof supports
+  ctx.strokeStyle = '#bbb';
+  ctx.lineWidth = 2;
+  for (let x = 20; x < CANVAS_W; x += 50) {
+    ctx.beginPath();
+    ctx.moveTo(x, 58);
+    ctx.lineTo(x + 25, 80);
+    ctx.lineTo(x + 50, 58);
+    ctx.stroke();
+  }
+
+  // Upper crowd
+  drawCrowd(0, 85, CANVAS_W, 90, ['#e8d8a0', '#d4c080', '#c8b070']);
+
+  // Divider between tiers
+  ctx.fillStyle = '#777';
+  ctx.fillRect(0, 178, CANVAS_W, 6);
+
+  // Lower tier (red/maroon — like the original)
+  const lowerGrad = ctx.createLinearGradient(0, 184, 0, 340);
+  lowerGrad.addColorStop(0, '#8b3030');
+  lowerGrad.addColorStop(1, '#6b2020');
+  ctx.fillStyle = lowerGrad;
+  ctx.fillRect(0, 184, CANVAS_W, 156);
+
+  // Lower crowd
+  drawCrowd(0, 195, CANVAS_W, 135, ['#cc4444', '#aa3333', '#dd6666', '#993333']);
+
+  // Pitch background (perspective grass behind the ad boards)
+  ctx.fillStyle = '#4a8c3f';
+  ctx.fillRect(0, 330, CANVAS_W, 20);
+  // Pitch lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(CANVAS_W / 2, 330);
+  ctx.lineTo(CANVAS_W / 2, 350);
+  ctx.stroke();
+
+  // Advertising board
+  ctx.fillStyle = '#1a3a8a';
+  ctx.fillRect(0, AD_BOARD_Y, CANVAS_W, AD_BOARD_HEIGHT);
+  // Ad board border
+  ctx.fillStyle = '#0e2660';
+  ctx.fillRect(0, AD_BOARD_Y, CANVAS_W, 3);
+  ctx.fillRect(0, GROUND_Y - 3, CANVAS_W, 3);
+  // Ad text
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const adY = AD_BOARD_Y + AD_BOARD_HEIGHT / 2;
+  ctx.fillText('SPORTS HEADS FOOTBALL', CANVAS_W / 2, adY);
+  ctx.font = '10px Arial';
+  ctx.fillText('ONLINE EDITION', 150, adY);
+  ctx.fillText('ONLINE EDITION', CANVAS_W - 150, adY);
+
+  // Playing field (grass)
   const grassGrad = ctx.createLinearGradient(0, GROUND_Y, 0, CANVAS_H);
   grassGrad.addColorStop(0, '#4CAF50');
-  grassGrad.addColorStop(1, '#2E7D32');
+  grassGrad.addColorStop(1, '#3d8b40');
   ctx.fillStyle = grassGrad;
   ctx.fillRect(0, GROUND_Y, CANVAS_W, CANVAS_H - GROUND_Y);
 
   // Grass stripes
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  for (let x = 0; x < CANVAS_W; x += 40) {
-    if ((x / 40) % 2 === 0) {
-      ctx.fillRect(x, GROUND_Y, 40, CANVAS_H - GROUND_Y);
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  for (let x = 0; x < CANVAS_W; x += 50) {
+    if ((x / 50) % 2 === 0) {
+      ctx.fillRect(x, GROUND_Y, 50, CANVAS_H - GROUND_Y);
     }
   }
 
-  // Center line
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 5]);
-  ctx.beginPath();
-  ctx.moveTo(CANVAS_W / 2, GROUND_Y);
-  ctx.lineTo(CANVAS_W / 2, CANVAS_H);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Center circle
-  ctx.beginPath();
-  ctx.arc(CANVAS_W / 2, GROUND_Y + 30, 50, Math.PI, 2 * Math.PI);
-  ctx.stroke();
+  // Center score on the field (like the original)
+  if (gameState) {
+    ctx.fillStyle = 'rgba(0,80,0,0.4)';
+    ctx.font = 'bold 80px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      gameState.score.left + ' - ' + gameState.score.right,
+      CANVAS_W / 2, 280
+    );
+  }
 }
 
-function drawCloud(x, y, size) {
-  ctx.beginPath();
-  ctx.arc(x, y, size, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.8, y - size * 0.3, size * 0.7, 0, Math.PI * 2);
-  ctx.arc(x + size * 1.4, y, size * 0.6, 0, Math.PI * 2);
-  ctx.fill();
+function drawCrowd(x, y, width, height, colors) {
+  const headSize = 5;
+  const spacing = 11;
+  for (let row = 0; row < height / spacing; row++) {
+    for (let col = 0; col < width / spacing; col++) {
+      const cx = x + col * spacing + (row % 2) * 5 + 5;
+      const cy = y + row * spacing + 5;
+      if (cx > x + width || cy > y + height) continue;
+      // Head
+      const color = colors[Math.floor((col * 7 + row * 13) % colors.length)];
+      ctx.fillStyle = color;
+      ctx.fillRect(cx - headSize / 2, cy - headSize / 2, headSize, headSize - 1);
+      // Body hint
+      ctx.fillStyle = colors[(Math.floor((col * 3 + row * 7 + 1) % colors.length))];
+      ctx.fillRect(cx - headSize / 2, cy + headSize / 2 - 1, headSize, 3);
+    }
+  }
 }
 
 // Draw goal backgrounds (nets) — rendered BEHIND the ball
 function drawGoalNets() {
-  // Left goal net background
-  // Dark interior for depth
-  ctx.fillStyle = 'rgba(30,30,30,0.6)';
+  // Left goal
+  // Net area background
+  ctx.fillStyle = 'rgba(220,220,220,0.5)';
   ctx.fillRect(0, GOAL_Y, GOAL_WIDTH, GOAL_HEIGHT);
-  // Back wall shading
-  ctx.fillStyle = 'rgba(60,60,60,0.4)';
-  ctx.fillRect(0, GOAL_Y, 4, GOAL_HEIGHT);
-  // Net lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  // Net mesh - diagonal pattern like real nets
+  ctx.strokeStyle = 'rgba(180,180,180,0.6)';
   ctx.lineWidth = 1;
-  for (let y = GOAL_Y; y <= GROUND_Y; y += 10) {
+  for (let i = 0; i < GOAL_WIDTH + GOAL_HEIGHT; i += 8) {
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(GOAL_WIDTH, y);
+    ctx.moveTo(Math.min(i, GOAL_WIDTH), GOAL_Y + Math.max(0, i - GOAL_WIDTH));
+    ctx.lineTo(0, GOAL_Y + Math.min(i, GOAL_HEIGHT));
     ctx.stroke();
   }
-  for (let x = 0; x <= GOAL_WIDTH; x += 10) {
+  for (let i = 0; i < GOAL_WIDTH + GOAL_HEIGHT; i += 8) {
     ctx.beginPath();
-    ctx.moveTo(x, GOAL_Y);
-    ctx.lineTo(x, GROUND_Y);
+    ctx.moveTo(Math.max(0, GOAL_WIDTH - i), GOAL_Y + Math.max(0, i - GOAL_WIDTH));
+    ctx.lineTo(GOAL_WIDTH, GOAL_Y + Math.min(i, GOAL_HEIGHT));
     ctx.stroke();
   }
 
-  // Right goal net background
-  ctx.fillStyle = 'rgba(30,30,30,0.6)';
+  // Right goal
+  ctx.fillStyle = 'rgba(220,220,220,0.5)';
   ctx.fillRect(CANVAS_W - GOAL_WIDTH, GOAL_Y, GOAL_WIDTH, GOAL_HEIGHT);
-  ctx.fillStyle = 'rgba(60,60,60,0.4)';
-  ctx.fillRect(CANVAS_W - 4, GOAL_Y, 4, GOAL_HEIGHT);
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.strokeStyle = 'rgba(180,180,180,0.6)';
   ctx.lineWidth = 1;
-  for (let y = GOAL_Y; y <= GROUND_Y; y += 10) {
+  const rx = CANVAS_W - GOAL_WIDTH;
+  for (let i = 0; i < GOAL_WIDTH + GOAL_HEIGHT; i += 8) {
     ctx.beginPath();
-    ctx.moveTo(CANVAS_W - GOAL_WIDTH, y);
-    ctx.lineTo(CANVAS_W, y);
+    ctx.moveTo(rx + Math.min(i, GOAL_WIDTH), GOAL_Y + Math.max(0, i - GOAL_WIDTH));
+    ctx.lineTo(rx, GOAL_Y + Math.min(i, GOAL_HEIGHT));
     ctx.stroke();
   }
-  for (let x = CANVAS_W - GOAL_WIDTH; x <= CANVAS_W; x += 10) {
+  for (let i = 0; i < GOAL_WIDTH + GOAL_HEIGHT; i += 8) {
     ctx.beginPath();
-    ctx.moveTo(x, GOAL_Y);
-    ctx.lineTo(x, GROUND_Y);
+    ctx.moveTo(rx + Math.max(0, GOAL_WIDTH - i), GOAL_Y + Math.max(0, i - GOAL_WIDTH));
+    ctx.lineTo(rx + GOAL_WIDTH, GOAL_Y + Math.min(i, GOAL_HEIGHT));
     ctx.stroke();
   }
 }
 
 // Draw goal posts and crossbars — rendered IN FRONT of the ball
 function drawGoalPosts() {
-  // Left goal
-  ctx.fillStyle = '#fff';
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 4;
-  ctx.fillRect(GOAL_WIDTH - 4, GOAL_Y - 4, 8, GOAL_HEIGHT + 4); // Post
-  ctx.fillRect(0, GOAL_Y - 6, GOAL_WIDTH + 4, 8); // Crossbar
-  // Post highlight
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.fillRect(GOAL_WIDTH - 2, GOAL_Y, 2, GOAL_HEIGHT);
+  const postW = 6;
 
-  // Right goal
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 4, GOAL_Y - 4, 8, GOAL_HEIGHT + 4); // Post
-  ctx.fillRect(CANVAS_W - GOAL_WIDTH - 4, GOAL_Y - 6, GOAL_WIDTH + 4, 8); // Crossbar
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.fillRect(CANVAS_W - GOAL_WIDTH, GOAL_Y, 2, GOAL_HEIGHT);
+  // Left goal frame
+  ctx.fillStyle = '#e0e0e0';
+  ctx.strokeStyle = '#999';
+  ctx.lineWidth = 1;
+  // Back post (left edge)
+  ctx.fillRect(0, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.strokeRect(0, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  // Front post
+  ctx.fillRect(GOAL_WIDTH - postW / 2, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.strokeRect(GOAL_WIDTH - postW / 2, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  // Crossbar
+  ctx.fillRect(0, GOAL_Y - postW, GOAL_WIDTH + postW / 2, postW);
+  ctx.strokeRect(0, GOAL_Y - postW, GOAL_WIDTH + postW / 2, postW);
+  // Ground bar
+  ctx.fillRect(0, GROUND_Y - 2, GOAL_WIDTH + postW / 2, 4);
+
+  // Right goal frame
+  const rPostX = CANVAS_W - GOAL_WIDTH;
+  ctx.fillRect(rPostX - postW / 2, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.strokeRect(rPostX - postW / 2, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.fillRect(CANVAS_W - postW, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.strokeRect(CANVAS_W - postW, GOAL_Y - postW, postW, GOAL_HEIGHT + postW);
+  ctx.fillRect(rPostX - postW / 2, GOAL_Y - postW, GOAL_WIDTH + postW / 2, postW);
+  ctx.strokeRect(rPostX - postW / 2, GOAL_Y - postW, GOAL_WIDTH + postW / 2, postW);
+  ctx.fillRect(rPostX - postW / 2, GROUND_Y - 2, GOAL_WIDTH + postW / 2, 4);
 
   ctx.shadowBlur = 0;
+}
+
+// Draw dark border frame around the arena (like the original)
+function drawArenaFrame() {
+  ctx.strokeStyle = '#2a2a2a';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, CANVAS_W - 6, CANVAS_H - 6);
 }
 
 function drawBall(ball) {
@@ -779,6 +863,9 @@ function render() {
   if (gameState.state === 'countdown') {
     drawCountdown(gameState.countdownTimer);
   }
+
+  // Dark border frame
+  drawArenaFrame();
 
   requestAnimationFrame(render);
 }
